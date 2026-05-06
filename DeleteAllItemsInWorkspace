@@ -1,0 +1,39 @@
+# Welcome to your new notebook
+# Type here in the cell editor to add code!
+
+import sempy.fabric as fabric
+from tqdm import tqdm
+
+def nuke_workspace():
+    # Get current workspace ID automatically
+    workspace_id = fabric.get_workspace_id()
+
+    print(f"workspace is {workspace_id}")
+    
+    # List all items in the workspace
+    items = fabric.list_items(workspace=workspace_id)
+    
+    # Filter out this notebook so it doesn't delete itself while running
+    # Replace 'NukeScript' with the actual name of your notebook
+    current_notebook_name = "Notebook_1" 
+    items_to_delete = items[items['Display Name'] != current_notebook_name]
+    
+    print(f"Found {len(items_to_delete)} items to delete.")
+    
+    # Initialize the Fabric REST client
+    client = fabric.FabricRestClient()
+    
+    for _, item in tqdm(items_to_delete.iterrows(), total=len(items_to_delete), desc="Deleting items"):
+        item_id = item['Id']
+        item_type = item['Type']
+        try:
+            # Call the Fabric REST API to delete each item
+            client.delete(f"/v1/workspaces/{workspace_id}/items/{item_id}")
+            # print(f"/v1/workspaces/{workspace_id}/items/{item_id}")
+        except Exception as e:
+            print(f"Failed to delete {item['Display Name']} ({item_type}): {e}")
+
+    print("Cleanup complete. Only this notebook remains.")
+
+nuke_workspace()
+
